@@ -3,7 +3,6 @@
 //  LabsSearch
 //
 //  Created by Xcode on ’18/12/14.
-//  Copyright © 2018 Distant Labs. All rights reserved.
 //
 
 import UIKit
@@ -34,10 +33,9 @@ class IconFetcher: NSObject, XMLParserDelegate {
     /// - Returns: A tupple of `URL` and the host string if successful, otherwise `nil`.
     func getUrlComponents(_ urlString: String, characterEncoder encoder: CharacterEncoder? = nil) -> (URL, String)? {
         // Convert urlString into URL components
-//        guard var components = URLComponents(string: urlString) else {
         guard let encodedUrl = urlString.encodedUrl(characterEncoder: encoder),
             var components = URLComponents(url: encodedUrl, resolvingAgainstBaseURL: true) else {
-            print(.x, "Failed to convert URL text field contents to URL for background retrieval.")
+            print("Failed to convert URL text field contents to URL for background retrieval.")
             return nil
         }
         
@@ -46,13 +44,13 @@ class IconFetcher: NSObject, XMLParserDelegate {
             components.scheme = "https"
         } else if components.scheme != "https" {
             // If the URL wasn't http(s), don't try to load it in the background
-            print(.n, "Cannot load URL in background for non-http(s) URLs.")
+            print("Cannot load URL in background for non-http(s) URLs.")
             return nil
         }
         
         guard let url = components.url,
             let host = components.host else {
-                print(.x, "Failed to synthesize URL components into functional URL.")
+                print("Failed to synthesize URL components into functional URL.")
                 return nil
         }
         
@@ -84,7 +82,7 @@ class IconFetcher: NSObject, XMLParserDelegate {
         checkPossibleIconUrls { (bestIcon) in
             if let data = bestIcon.data,
                 let icon = UIImage(data: data) {
-                print(.o, "Creating icon from HtmlIcon data (URL \(bestIcon.href)).")
+                print("Creating icon from HtmlIcon data (URL \(bestIcon.href)).")
                 completion(icon)
             } else {
                 // Return nil so that we can still update encoding
@@ -102,7 +100,7 @@ class IconFetcher: NSObject, XMLParserDelegate {
     private func checkPossibleIconUrls(completion: @escaping (_ bestIcon: HtmlIcon) -> Void) {
         guard let url = url,
             let host = url.host else {
-            print(.x, "URL invalid, or does not have a valid host.")
+            print("URL invalid, or does not have a valid host.")
             return
         }
         
@@ -185,7 +183,7 @@ class IconFetcher: NSObject, XMLParserDelegate {
             // Look for all icons
             for icon in self.icons {
                 guard let url = URL(string: icon.href) else {
-                    print(.n, "Possible icon URL was malformed, so we will not attempt to fetch from there.")
+                    print("Possible icon URL was malformed, so we will not attempt to fetch from there.")
                     // TODO: Does this continue statement work as expected?
                     continue
                 }
@@ -198,7 +196,7 @@ class IconFetcher: NSObject, XMLParserDelegate {
                     if let data = data,
                         let response = response as? HTTPURLResponse,
                         response.statusCode == 200 {
-                        print(.i, "Found icon \(checkedIcons) of \(self.icons.count) at URL \(icon.href).")
+                        print("Found icon \(checkedIcons) of \(self.icons.count) at URL \(icon.href).")
                         
                         // Add data to the icon
                         let icon = HtmlIcon(href: icon.href, rel: icon.rel, size: icon.size, data: data)
@@ -206,10 +204,10 @@ class IconFetcher: NSObject, XMLParserDelegate {
                         // Preference: Exists, named apple-touch-icon*, largest size
                         
                         if bestIcon.href.isEmpty {
-                            print(.o, "Setting new icon (bestIcon was empty).")
+                            print("Setting new icon (bestIcon was empty).")
                             bestIcon = icon
                         } else if !bestIcon.rel.contains("apple-touch-icon") && icon.rel.contains("apple-touch-icon") {
-                            print(.o, "Setting new icon (apple-touch-icon preferred).")
+                            print("Setting new icon (apple-touch-icon preferred).")
                             bestIcon = icon
                         } else if (
                             (bestIcon.rel.contains("apple-touch-icon") &&                               icon.rel.contains("apple-touch-icon")
@@ -217,7 +215,7 @@ class IconFetcher: NSObject, XMLParserDelegate {
                             )
                             ) && bestIcon.size <= icon.size {
                             // If icons are both (not) apple and new icon is bigger
-                            print(.o, "Old icon (size \(bestIcon.size)) replaced by new icon (size \(icon.size)).")
+                            print("Old icon (size \(bestIcon.size)) replaced by new icon (size \(icon.size)).")
                             bestIcon = icon
                         }
                     }
@@ -257,11 +255,9 @@ class IconFetcher: NSObject, XMLParserDelegate {
                 
                 //- Just get the <head> part, if it's defined
                 // We'll try to use the page's character encoding if we can get it
-//                var html = String(data: data, encoding: .utf8)
                 var html = String(data: data, encoding: encoding ?? .utf8)
                 // Keep HTML for SearchEngineEditor
                 self.html = html
-//                print(.d, "IconFetcher html: \(html != nil ? String("💚") : String("💔"))")
                 let components = html?.components(separatedBy: "<head")
                 
                 // If the split work, we've got a <head> tag, or possibly <header>
@@ -275,14 +271,14 @@ class IconFetcher: NSObject, XMLParserDelegate {
                         html = "<head\(head[0])</head>)"
                     default:
                         // No head tag was found; we'll just use the full HTML
-                        print(.i, "No head tag found; using full HTML source code.")
+                        print("No head tag found; using full HTML source code.")
                         break
                     }
                 }
                 
                 // Parse the HTML as XML; delegate is instructed to look for elements relevant to icons
                 guard let xml = html?.data(using: .utf8) else {
-                    print(.x, "Failed to convert HTML to XML.")
+                    print("Failed to convert HTML to XML.")
                     completion()
                     return
                 }
@@ -297,15 +293,15 @@ class IconFetcher: NSObject, XMLParserDelegate {
                 completion()
             } else {
                 if let error = error {
-                    print(.x, "Failed to load URL in background with error: \(error)")
+                    print("Failed to load URL in background with error: \(error)")
                 } else {
-                    print(.x, "Failed to load URL in background (no error reported by server).")
+                    print("Failed to load URL in background (no error reported by server).")
                 }
-                #if !EXTENSION
+//                 #if !EXTENSION
                 DispatchQueue.main.async {                    
                     UIApplication.shared.isNetworkActivityIndicatorVisible = false
                 }
-                #endif
+//                 #endif
             }
         }
         
@@ -318,10 +314,6 @@ class IconFetcher: NSObject, XMLParserDelegate {
     
     // Parses each XML tag to look for <link> items with icon-related rels
     func parser(_ parser: XMLParser, didStartElement elementName: String, namespaceURI: String?, qualifiedName qName: String?, attributes attributeDict: [String : String] = [:]) {
-//        /* *** DEBUG *** */
-//        print("***** ELEMENT NAME: \(elementName)")
-//        print("***** ATTRIBUTES: \(attributeDict)")
-        
         // We're only concerned with <link> tags
         if elementName == "link" {
             // We only want those with icon rel attributes
@@ -331,16 +323,15 @@ class IconFetcher: NSObject, XMLParserDelegate {
             }
             
             // Make sure this is an absolute URL using httpS
-            // TODO: Is this redundant from/in UrlDetails updateView()?
             guard let unformattedHref = attributeDict["href"],
                 let absoluteUrl = URL(string: unformattedHref, relativeTo: url)?.absoluteString,
                 var components = URLComponents(string: absoluteUrl) else {
-                    print(.x, "Failed to format <link> href into absolute URL.")
+                    print("Failed to format <link> href into absolute URL.")
                     return
             }
             components.scheme = "https"
             guard let href = components.string else {
-                print(.x, "Failed to format <link> href into https URL.")
+                print("Failed to format <link> href into https URL.")
                 return
             }
             
@@ -356,14 +347,14 @@ class IconFetcher: NSObject, XMLParserDelegate {
             
             // Add this new icon to the list of candidates
             icons.append(icon)
-            print(.i, "Appended icon.")
+            print("Appended icon.")
         }
     }
     
     // Stop looking for icon info once we leave the <head> tag
     func parser(_ parser: XMLParser, didEndElement elementName: String, namespaceURI: String?, qualifiedName qName: String?) {
         if elementName == "head" {
-            print(.i, "Aborting XML parsing because closing head tag was reached.")
+            print("Aborting XML parsing because closing head tag was reached.")
             parser.abortParsing()
         }
     }
