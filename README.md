@@ -8,7 +8,19 @@ This class is broken out of [LabsSearch] (an early attempt at coding, so the cod
 In its current state, the code asks for a **[CharacterEncoder]** struct. This exists in the [LabsSearch] project, and will also be uploaded to its own repository in the future.
 
 ## Usage
-_to do_
+```swift
+let iconFetcher = IconFetcher()
+let url = URL(string: "https://www.example.com/")!
+var favIcon = UIImage()
+
+iconFetcher.fetchIcon(for: url) { icon in
+    if let icon = icon {
+        DispatchQueue.main.async {
+            self.favIcon.image = icon
+        }
+    }
+}
+```
 
 ## To do
 Any number of improvements could be made to the code, including rewriting from scratch. In particular, network calls run completely untamed.
